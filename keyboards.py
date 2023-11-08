@@ -25,3 +25,13 @@ async def categories_keyboard() -> InlineKeyboardMarkup:
     builder.button(text="Назад", callback_data='start')
     builder.adjust(1)
     return builder.as_markup()
+
+async def brand_keyboard(category) -> InlineKeyboardMarkup:
+    """Create brand markup"""
+    brands = await base.get_unique_brand(category)
+    builder = InlineKeyboardBuilder()
+    for brand in brands:
+        builder.button(text=brand['brand'], callback_data=f"brand_{brand['brand']}")
+    builder.button(text="Назад", callback_data='category')
+    builder.adjust(1)
+    return builder.as_markup()

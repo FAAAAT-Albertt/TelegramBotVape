@@ -3,7 +3,7 @@ import asyncio
 import sqlite3
 
 con = sqlite3.connect("database/bot.db")
-#con.row_factory = sqlite3.Row 
+#con.row_factory = sqlite3.Row
 con.row_factory = lambda C, R: { c[0]: R[i] for i, c in enumerate(C.description) }
 cur = con.cursor()
 
@@ -31,6 +31,10 @@ async def get_unique_categories() -> dict:
     select_query = "SELECT DISTINCT category FROM catalogs"
     return cur.execute(select_query).fetchall()
 
+async def get_unique_brand(category) -> dict:
+    """Reterns unique categories"""
+    select_query = f"SELECT DISTINCT brand FROM catalogs WHERE category = '{category}'"
+    return cur.execute(select_query).fetchall()
 
 if __name__ == "__main__":
     asyncio.run(get_unique_categories())
