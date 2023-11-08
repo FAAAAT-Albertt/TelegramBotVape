@@ -1,7 +1,6 @@
 """Database sqlite3 for Telegram Bot"""
 import asyncio
 import sqlite3
-import json
 
 con = sqlite3.connect("database/bot.db")
 #con.row_factory = sqlite3.Row 
