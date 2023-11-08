@@ -1,6 +1,8 @@
 """Keyboards for Telegram bot"""
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.types.reply_keyboard_markup import ReplyKeyboardMarkup
+from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from database import database as base
 
 async def start_keyboard() -> ReplyKeyboardMarkup:
     """Create started markup"""
@@ -13,3 +15,13 @@ async def start_keyboard() -> ReplyKeyboardMarkup:
     builder.button(text="Служба поддержки📞")
     builder.adjust(2,2,1,1)
     return builder.as_markup(resize_keyboard=True)
+
+async def categories_keyboard() -> InlineKeyboardMarkup:
+    """Create categories markup"""
+    categories = await base.get_unique_categories()
+    builder = InlineKeyboardBuilder()
+    for category in categories:
+        builder.button(text=category['category'], callback_data=f"cat_{category['category']}")
+    builder.button(text="Назад", callback_data='start')
+    builder.adjust(1)
+    return builder.as_markup()

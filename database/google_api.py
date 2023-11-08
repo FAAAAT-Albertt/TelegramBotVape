@@ -10,7 +10,7 @@ async def get_goods():
     wks = gc.open("TG_BOT")
     list_google = wks.worksheet("Товары").get_all_records()
     list_google = await prepare_price(list_google)
-    await base.insert_catalogs(list_google) 
+    await base.insert_catalogs(list_google)
 
 async def prepare_price(list_google: list):
     """Function prepare price"""
