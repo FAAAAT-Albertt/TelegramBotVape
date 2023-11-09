@@ -5,7 +5,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 #from aiogram.utils.markdown import hbold, hitalic, hlink
 import config
 import keyboards
@@ -38,6 +38,14 @@ async def brand(callback: CallbackQuery):
     await callback.message.edit_text("Выберите подкатегорию",
                                     reply_markup=await keyboards.brand_keyboard(data))
 
+@dp.callback_query(F.data.startswith("return_cat_"))
+async def return_brand(callback: CallbackQuery):
+    """Callback from goods"""
+    data = callback.data.replace('return_cat_', '')
+    await callback.message.delete()
+    await callback.message.answer("Выберите подкатегорию",
+                                    reply_markup=await keyboards.brand_keyboard(data))
+
 @dp.callback_query(F.data == 'category')
 async def category_message(callback: CallbackQuery):
     """Callback to category message"""
@@ -45,6 +53,33 @@ async def category_message(callback: CallbackQuery):
     await callback.message.answer("Выберите категорию",
                                   reply_markup=await keyboards.categories_keyboard())
 
+@dp.callback_query(F.data.startswith("brand_"))
+async def goods(callback: CallbackQuery):
+    """Callback from category"""
+    data = callback.data.replace('brand_', '')
+    data = data.split('_')
+    image, text_caption, markup = await keyboards.first_goods_keyboard(data[0], data[1])
+    await callback.message.delete()
+    await callback.message.answer_photo(photo=FSInputFile(image),
+                                        caption=text_caption, reply_markup=markup)
+
+@dp.callback_query(F.data.startswith("next_goods_"))
+async def next_goods(callback: CallbackQuery):
+    """Callback next goods"""
+    data = callback.data.replace('next_goods_', '')
+    image, text_caption, markup = await keyboards.goods_keyboard(data)
+    await callback.message.delete()
+    await callback.message.answer_photo(photo=FSInputFile(image),
+                                        caption=text_caption, reply_markup=markup)
+
+@dp.callback_query(F.data.startswith("prev_goods_"))
+async def prev_goods(callback: CallbackQuery):
+    """Callback previous goods"""
+    data = callback.data.replace('prev_goods_', '')
+    image, text_caption, markup = await keyboards.goods_keyboard(data)
+    await callback.message.delete()
+    await callback.message.answer_photo(photo=FSInputFile(image),
+                                        caption=text_caption, reply_markup=markup)
 
 async def start():
     """Start Telegram Bot"""

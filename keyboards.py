@@ -2,6 +2,7 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.types.reply_keyboard_markup import ReplyKeyboardMarkup
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from aiogram.utils.markdown import hbold, hitalic
 from database import database as base
 
 async def start_keyboard() -> ReplyKeyboardMarkup:
@@ -31,7 +32,50 @@ async def brand_keyboard(category) -> InlineKeyboardMarkup:
     brands = await base.get_unique_brand(category)
     builder = InlineKeyboardBuilder()
     for brand in brands:
-        builder.button(text=brand['brand'], callback_data=f"brand_{brand['brand']}")
+        builder.button(text=brand['brand'], callback_data=f"brand_{brand['brand']}_{category}")
     builder.button(text="Назад", callback_data='category')
     builder.adjust(1)
     return builder.as_markup()
+
+async def first_goods_keyboard(brand, category) -> (str, str, InlineKeyboardMarkup):
+    """Create markup for first goods""" 
+    goods = await base.get_first_of_goods(category, brand)
+    text_caption = hbold(goods[0]['name']) + "\nЦена: " + hitalic(f"{goods[0]['price']}р.")
+    image = f"jpg/{goods[0]['image']}"
+    builder = InlineKeyboardBuilder()
+    builder.button(text="<--", callback_data="None")
+    builder.button(text=str(goods[0]['count']), callback_data="None")
+    if len(goods) > 1:
+        builder.button(text="-->", callback_data=f"next_goods_{goods[1]['id_catalog']}")
+    else:
+        builder.button(text="-->", callback_data="None")
+    builder.button(text="Добавить в корзину", callback_data=f"add_card_{goods[0]['id_catalog']}")
+    builder.button(text="Назад", callback_data=f"return_cat_{category}")
+    builder.adjust(3,1,1)
+    return image, text_caption, builder.as_markup()
+
+async def goods_keyboard(id_catalog) -> (str, str, InlineKeyboardMarkup):
+    """Create markup for first goods""" 
+    goods, category = await base.get_goods_by_id(id_catalog)
+    index = 0
+    for good in goods:
+        if good['id_catalog'] == id_catalog:
+            text_caption = hbold(goods[0]['name']) + "\nЦена: " + hitalic(f"{goods[0]['price']}р.")
+            image = f"jpg/{goods[0]['image']}"
+            builder = InlineKeyboardBuilder()
+            if index == 0:
+                builder.button(text="<--", callback_data="None")
+            else:
+                builder.button(text="<--",
+                               callback_data=f"prev_goods_{goods[index]['id_catalog']}")
+            builder.button(text=str(goods[0]['count']), callback_data="None")
+            if index == len(goods) - 1:
+                builder.button(text="-->", callback_data="None")
+            else:
+                builder.button(text="-->",
+                               callback_data=f"next_goods_{goods[index + 1]['id_catalog']}")
+            builder.button(text="Добавить в корзину", callback_data=f"add_card_{id_catalog}")
+            builder.button(text="Назад", callback_data=f"return_cat_{category}")
+            builder.adjust(3,1,1)
+            return image, text_caption, builder.as_markup()
+        index += 1
