@@ -9,6 +9,7 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 #from aiogram.utils.markdown import hbold, hitalic, hlink
 import config
 import keyboards
+from database import database as base
 
 dp = Dispatcher()
 bot = Bot(config.TOKEN, parse_mode=ParseMode.HTML)
@@ -16,13 +17,30 @@ bot = Bot(config.TOKEN, parse_mode=ParseMode.HTML)
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     """Answer to /start"""
-    await message.answer("Выберите нужную кнопку", reply_markup=await keyboards.start_keyboard())
+    check_user = await base.check_user(message.from_user.id)
+    if check_user:
+        await message.answer("Выберите нужную кнопку",
+                            reply_markup=await keyboards.start_keyboard())
+    else:
+        await message.answer(config.START_MESSAGE,
+                            reply_markup=await keyboards.prestart_keyboard())
 
 @dp.message(F.text == 'Ассортимент🍏')
 async def catalog(message: Message):
     """Answer to Ассортимент🍏"""
-    await message.answer("Выберите категорию", reply_markup=await keyboards.categories_keyboard())
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    await message.answer("Выберите категорию",
+                        reply_markup=await keyboards.categories_keyboard())
+    await bot.delete_message(chat_id=message.chat.id,
+                            message_id=message.message_id - 1)
+
+@dp.callback_query(F.data.startswith("city_"))
+async def city_choose(callback: CallbackQuery):
+    """Callback from city"""
+    data = callback.data.replace('city_', '')
+    await callback.message.delete()
+    await base.insert_user(callback.from_user.id, callback.from_user.username, data)
+    await callback.message.answer("Выберите нужную кнопку",
+                                    reply_markup=await keyboards.start_keyboard())
 
 @dp.callback_query(F.data == 'start')
 async def start_message(callback: CallbackQuery):

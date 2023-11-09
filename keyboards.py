@@ -17,6 +17,15 @@ async def start_keyboard() -> ReplyKeyboardMarkup:
     builder.adjust(2,2,1,1)
     return builder.as_markup(resize_keyboard=True)
 
+async def prestart_keyboard() -> InlineKeyboardMarkup:
+    """Create markup cities in the bot"""
+    cities = await base.get_cities()
+    builder = InlineKeyboardBuilder()
+    for city in cities:
+        builder.button(text=city['city'], callback_data=f"city_{city['id_city']}")
+    builder.adjust(1)
+    return builder.as_markup()
+
 async def categories_keyboard() -> InlineKeyboardMarkup:
     """Create categories markup"""
     categories = await base.get_unique_categories()

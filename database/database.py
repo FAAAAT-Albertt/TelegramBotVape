@@ -77,5 +77,31 @@ async def insert_cities(mas_city) -> None:
         con.commit()
         index += 1
 
+async def get_cities() -> list:
+    """Function reterns list of city"""
+    select_query = "SELECT * FROM cities"
+    return cur.execute(select_query).fetchall()
+
+async def check_user(tg_id) -> bool:
+    """Function checks whether there is a user in the database"""
+    select_query = f"SELECT * FROM users WHERE user_id = {tg_id}"
+    select = cur.execute(select_query).fetchone()
+    if select is None:
+        return False
+    return True
+
+async def insert_user(user_id, user_name, id_city) -> None:
+    """Function inserts user to the database"""
+    select_query = "SELECT * FROM users"
+    select = cur.execute(select_query).fetchall()
+    if select == []:
+        index = 1
+    else:
+        index = len(select)
+    insert_query = f"""INSERT INTO users VALUES
+                    ({index}, {user_id}, "{user_name}", {id_city})"""
+    cur.execute(insert_query)
+    con.commit()
+
 if __name__ == "__main__":
     asyncio.run(get_unique_categories())
