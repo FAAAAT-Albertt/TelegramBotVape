@@ -59,16 +59,16 @@ async def goods_keyboard(id_catalog) -> (str, str, InlineKeyboardMarkup):
     goods, category = await base.get_goods_by_id(id_catalog)
     index = 0
     for good in goods:
-        if good['id_catalog'] == id_catalog:
-            text_caption = hbold(goods[0]['name']) + "\nЦена: " + hitalic(f"{goods[0]['price']}р.")
-            image = f"jpg/{goods[0]['image']}"
+        if good['id_catalog'] == int(id_catalog):
+            text_caption = hbold(good['name']) + "\nЦена: " + hitalic(f"{good['price']}р.")
+            image = f"jpg/{good['image']}"
             builder = InlineKeyboardBuilder()
             if index == 0:
                 builder.button(text="<--", callback_data="None")
             else:
                 builder.button(text="<--",
-                               callback_data=f"prev_goods_{goods[index]['id_catalog']}")
-            builder.button(text=str(goods[0]['count']), callback_data="None")
+                               callback_data=f"prev_goods_{goods[index - 1]['id_catalog']}")
+            builder.button(text=str(good['count']), callback_data="None")
             if index == len(goods) - 1:
                 builder.button(text="-->", callback_data="None")
             else:

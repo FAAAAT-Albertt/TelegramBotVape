@@ -12,6 +12,13 @@ async def get_goods():
     list_google = await prepare_price(list_google)
     await base.insert_catalogs(list_google)
 
+async def get_cities():
+    """Function insert cities to database"""
+    gc = gspread.service_account(filename='database/credentials.json')
+    wks = gc.open("TG_BOT")
+    list_google = wks.worksheet("Города").get_all_records()
+    await base.insert_cities(list_google)
+
 async def prepare_price(list_google: list):
     """Function prepare price"""
     index = 0
@@ -22,4 +29,4 @@ async def prepare_price(list_google: list):
     return list_google
 
 if __name__ == "__main__":
-    asyncio.run(get_goods())
+    asyncio.run(get_cities())

@@ -6,9 +6,21 @@ con = sqlite3.connect("database/bot.db")
 con.row_factory = lambda C, R: { c[0]: R[i] for i, c in enumerate(C.description) }
 cur = con.cursor()
 
+cur.execute("""CREATE TABLE IF NOT EXISTS cities
+            (id_city INTEGER, city TEXT)""")
+con.commit()
+
 cur.execute("""CREATE TABLE IF NOT EXISTS catalogs
             (id_catalog INTEGER, category TEXT, brand TEXT, image TEXT,
             name TEXT, price REAL, count INTEGER)""")
+con.commit()
+
+cur.execute("""CREATE TABLE IF NOT EXISTS users
+            (id_user INTEGER, user_id INTEGER, user_name TEXT, id_city INTEGER)""")
+con.commit()
+
+cur.execute("""CREATE TABLE IF NOT EXISTS orders
+            (id_order INTEGER, id_user INTEGER, id_catalog INTEGER, status TEXT)""")
 con.commit()
 
 async def insert_catalogs(mas_goods: list) -> None:
@@ -48,9 +60,22 @@ async def get_goods_by_id(id_catalog) -> dict:
                     FROM catalogs WHERE id_catalog = {id_catalog}"""
     select = cur.execute(select_query).fetchone()
     select_query = f"""SELECT
-                    id_catalog, image, name, price, count
-                    FROM catalogs WHERE category = '{select['category']}' and brand = '{select['brand']}'"""
+                    id_catalog, image, name, price, count FROM catalogs
+                    WHERE category = '{select['category']}' and brand = '{select['brand']}'"""
     return cur.execute(select_query).fetchall(), select['category']
+
+async def insert_cities(mas_city) -> None:
+    """Function inserts cities to table cities"""
+    cur.execute("DELETE FROM cities")
+    con.commit()
+
+    index = 1
+    for city in mas_city:
+        insert_query = f"""INSERT INTO cities VALUES
+                    ({index}, "{city['Город']}")"""
+        cur.execute(insert_query)
+        con.commit()
+        index += 1
 
 if __name__ == "__main__":
     asyncio.run(get_unique_categories())
