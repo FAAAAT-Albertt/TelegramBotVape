@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.types.reply_keyboard_markup import ReplyKeyboardMarkup
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 from aiogram.utils.markdown import hbold, hitalic
-from database import database as base
+# from database import database as base
 
 async def start_keyboard() -> ReplyKeyboardMarkup:
     """Create started markup"""
@@ -47,7 +47,7 @@ async def brand_keyboard(category) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 async def first_goods_keyboard(brand, category) -> (str, str, InlineKeyboardMarkup):
-    """Create markup for first goods""" 
+    """Create markup for first goods"""
     goods = await base.get_first_of_goods(category, brand)
     text_caption = hbold(goods[0]['name']) + "\nЦена: " + hitalic(f"{goods[0]['price']}р.")
     image = f"jpg/{goods[0]['image']}"
@@ -64,7 +64,7 @@ async def first_goods_keyboard(brand, category) -> (str, str, InlineKeyboardMark
     return image, text_caption, builder.as_markup()
 
 async def goods_keyboard(id_catalog) -> (str, str, InlineKeyboardMarkup):
-    """Create markup for first goods""" 
+    """Create markup for first goods"""
     goods, category = await base.get_goods_by_id(id_catalog)
     index = 0
     for good in goods:
@@ -88,3 +88,10 @@ async def goods_keyboard(id_catalog) -> (str, str, InlineKeyboardMarkup):
             builder.adjust(3,1,1)
             return image, text_caption, builder.as_markup()
         index += 1
+
+async def feedback_keyboard() -> InlineKeyboardMarkup:
+    """Create feedback markup"""
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Ответить", callback_data="admin_answer")
+
+    return builder.as_markup()

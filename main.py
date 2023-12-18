@@ -6,24 +6,28 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, FSInputFile
+from aiogram.fsm.context import FSMContext
 #from aiogram.utils.markdown import hbold, hitalic, hlink
 import config
 import keyboards
-from database import database as base
 
-dp = Dispatcher()
+# from database import database as base
+from states import Form, storage
+
+
+dp = Dispatcher(storage=storage)
 bot = Bot(config.TOKEN, parse_mode=ParseMode.HTML)
 
 @dp.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
+async def command_start_handler(message: Message, state: FSMContext) -> None:
     """Answer to /start"""
-    check_user = await base.check_user(message.from_user.id)
-    if check_user:
-        await message.answer("Выберите нужную кнопку",
+    # check_user = await base.check_user(message.from_user.id)
+    # if check_user:
+    await message.answer("Выберите нужную кнопку",
                             reply_markup=await keyboards.start_keyboard())
-    else:
-        await message.answer(config.START_MESSAGE,
-                            reply_markup=await keyboards.prestart_keyboard())
+    # else:
+    #     await message.answer(config.START_MESSAGE,
+    #                         reply_markup=await keyboards.prestart_keyboard())
 
 @dp.message(F.text == 'Ассортимент🍏')
 async def catalog(message: Message):
@@ -32,6 +36,33 @@ async def catalog(message: Message):
                         reply_markup=await keyboards.categories_keyboard())
     await bot.delete_message(chat_id=message.chat.id,
                             message_id=message.message_id - 1)
+
+@dp.message(F.text == "Служба поддержки📞")
+async def feedback(message: Message, state: FSMContext) -> None:
+    """Answer to Служба поддержки📞"""
+    await message.answer("Напишите свой вопрос")
+    await state.set_state(Form.user_question)
+
+
+@dp.message(Form.user_question)
+async def update_form_user(message: Message, state: FSMContext) -> None:
+    """update memory form and answer message to admin"""
+    await state.update_data(user_question=message.text)
+    await state.update_data(user_id=message.chat.id)
+    await bot.send_message(chat_id=config.ADMIN_ID, text=message.text, reply_markup=await keyboards.feedback_keyboard())
+
+@dp.message(Form.admin_answer)
+async def update_admin_form(message: Message, state: FSMContext) -> None:
+    """update memory form and answer message to user"""
+    await state.update_data(admin_answer=message.text)
+    data = await state.get_data()
+    await bot.send_message(chat_id=data['user_id'], text=message.text)
+    await state.clear()
+
+@dp.callback_query(F.data == "admin_answer")
+async def admin_message(callback: CallbackQuery, state: FSMContext):
+    """Answer admin's for user"""
+    await state.set_state(Form.admin_answer)
 
 @dp.callback_query(F.data.startswith("city_"))
 async def city_choose(callback: CallbackQuery):
